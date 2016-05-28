@@ -14,6 +14,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 from deconv import deconv2d
 from progressbar import ETA, Bar, Percentage, ProgressBar
+from utils import bw_grid_vis
 
 flags = tf.flags
 logging = tf.logging
@@ -152,10 +153,9 @@ if __name__ == "__main__":
                                                     discriminator_loss))
 
             imgs = sess.run(G)
-            for k in range(FLAGS.batch_size):
-                imgs_folder = os.path.join(FLAGS.working_directory, 'imgs')
-                if not os.path.exists(imgs_folder):
-                    os.makedirs(imgs_folder)
+            
+            imgs_folder = os.path.join(FLAGS.working_directory, 'imgs')
+            if not os.path.exists(imgs_folder):
+                os.makedirs(imgs_folder)
+            bw_grid_vis(imgs.reshape(imgs.shape[0],28,28), savename=os.path.join(imgs_folder, '%d.png') % epoch)
 
-                imsave(os.path.join(imgs_folder, '%d.png') % k,
-                       imgs[k].reshape(28, 28))
