@@ -16,6 +16,7 @@ from deconv import deconv2d
 from progressbar import ETA, Bar, Percentage, ProgressBar
 from utils import bw_grid_vis
 
+logeps = 1e-12 # small constant to prevent log(x) going to -infinity as x --> 0
 flags = tf.flags
 logging = tf.logging
 
@@ -31,12 +32,8 @@ FLAGS = flags.FLAGS
 
 def encoder(input_tensor):
     '''Create encoder network.
-
-    Args:
-        input_tensor: a batch of flattened images [batch_size, 28*28]
-
-    Returns:
-        A tensor that expresses the encoder network
+    Args: input_tensor: a batch of flattened images [batch_size, 28*28]
+    Returns: A tensor that expresses the encoder network
     '''
     return (pt.wrap(input_tensor).
             reshape([FLAGS.batch_size, 28, 28, 1]).
@@ -49,15 +46,10 @@ def encoder(input_tensor):
 
 
 def decoder(input_tensor=None):
-    '''Create decoder network.
-
-        If input tensor is provided then decodes it, otherwise samples from 
-        a sampled vector.
-    Args:
-        input_tensor: a batch of vectors to decode
-
-    Returns:
-        A tensor that expresses the decoder network
+    '''Create decoder network. If input tensor is provided then decodes it,
+                               otherwise samples from a sampled vector.
+    Args: input_tensor: a batch of vectors to decode
+    Returns: A tensor that expresses the decoder network
     '''
     epsilon = tf.random_normal([FLAGS.batch_size, FLAGS.hidden_size])
     if input_tensor is None:
@@ -77,31 +69,23 @@ def decoder(input_tensor=None):
             flatten()).tensor, mean, stddev
 
 
-def get_vae_cost(mean, stddev, epsilon=1e-8):
-    '''VAE loss
-        See the paper
-
-    Args:
-        mean: 
-        stddev:
-        epsilon:
+def get_vae_cost(mean, stddev):
+    '''VAE loss: KL-divergence between embeddings q(z|x) and prior p(x)
+    Args: mean, stddev: of predicted embedding posterior distributions q(z|x)
     '''
     return tf.reduce_sum(0.5 * (tf.square(mean) + tf.square(stddev) -
-                                2.0 * tf.log(stddev + epsilon) - 1.0))
+                                2.0 * tf.log(stddev + logeps) - 1.0))
 
 
-def get_reconstruction_cost(output_tensor, target_tensor, epsilon=1e-8):
-    '''Reconstruction loss
-
-    Cross entropy reconstruction loss
-
+def get_reconstruction_cost(output_tensor, target_tensor):
+    '''Reconstruction loss: Binary cross entropy reconstruction loss
     Args:
-        output_tensor: tensor produces by decoder 
+        output_tensor: tensor produces by decoder
         target_tensor: the target tensor that we want to reconstruct
-        epsilon:
     '''
-    return tf.reduce_sum(-target_tensor * tf.log(output_tensor + epsilon) -
-                         (1.0 - target_tensor) * tf.log(1.0 - output_tensor + epsilon))
+    return tf.reduce_sum(-target_tensor * tf.log(output_tensor + logeps) -
+                         (1.0 - target_tensor) * tf.log(1.0 - output_tensor + logeps))
+
 
 if __name__ == "__main__":
     data_directory = os.path.join(FLAGS.working_directory, "MNIST")

@@ -32,7 +32,6 @@ FLAGS = flags.FLAGS
 def discriminator(input_tensor):
     '''Create a network that discriminates between images from a dataset and
     generated ones.
-
     Args:
         input: a batch of real images [batch, height, width, channels]
     Returns:
@@ -50,11 +49,9 @@ def discriminator(input_tensor):
 
 def get_discrinator_loss(D1, D2):
     '''Loss for the discriminator network
-
     Args:
         D1: logits computed with a discriminator networks from real images
         D2: logits computed with a discriminator networks from generated images
-
     Returns:
         Cross entropy loss, positive samples have implicit labels 1, negative 0s
     '''
@@ -65,7 +62,6 @@ def get_discrinator_loss(D1, D2):
 def generator():
     '''Create a network that generates images
     TODO: Add fixed initialization, so we can draw interpolated images
-
     Returns:
         A deconvolutional (not true deconv, transposed conv2d) network that
         generated images.
@@ -81,13 +77,11 @@ def generator():
 def get_generator_loss(D2):
     '''Loss for the genetor. Maximize probability of generating images that
     discrimator cannot differentiate.
-
-    Returns:
-        see the paper
+    Returns: see the paper
     '''
     return tf.reduce_mean(tf.nn.relu(D2) - D2 + tf.log(1.0 + tf.exp(-tf.abs(D2))))
 
-  
+
 if __name__ == "__main__":
     data_directory = os.path.join(FLAGS.working_directory, "MNIST")
     if not os.path.exists(data_directory):
@@ -153,7 +147,7 @@ if __name__ == "__main__":
                                                     discriminator_loss))
 
             imgs = sess.run(G)
-            
+
             imgs_folder = os.path.join(FLAGS.working_directory, 'imgs')
             if not os.path.exists(imgs_folder):
                 os.makedirs(imgs_folder)
